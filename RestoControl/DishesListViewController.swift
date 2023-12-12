@@ -27,7 +27,12 @@ class DishesListViewController: UIViewController, UITableViewDataSource, UITable
         cell.textLabel?.text = dish.name
         cell.detailTextLabel?.text = dish.description
         cell.imageView?.contentMode = .scaleAspectFit
-        cell.imageView?.image = UIImage(named: "logo-rest.png")
+        //cell.imageView?.image = UIImage(named: "logo-rest.png")
+        
+        cell.imageView?.sd_setImage(with: URL(string:dish.imagenURL), placeholderImage: UIImage(named: "logo-rest.png"))
+        
+//        cell.imageView?.image = UIImage(
+//            .sd_setImage(with: URL(string: dish.imagenURL), completed: nil)
         /*if let imageUrl = URL(string: dish.imagenURL) {
             cell.imageView!.sd_setImage(with: imageUrl, completed: { (image, error, cacheType, imageURL) in
                 if let error = error {
@@ -78,7 +83,10 @@ class DishesListViewController: UIViewController, UITableViewDataSource, UITable
                 dish.imagenURL = imageDict["url"] as? String ?? ""
             }
 
+            print(dish.imagenURL)
             self.dishes.append(dish)
+            
+            
             
             self.listDishesTable.reloadData()
 
