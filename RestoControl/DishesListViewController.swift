@@ -58,21 +58,43 @@ class DishesListViewController: UIViewController, UITableViewDataSource, UITable
         }
     }
     func deleteDishFromDatabase(dish: Dish, at indexPath: IndexPath) {
+        let alertController = UIAlertController(
+            title: "Confirmar Eliminación",
+            message: "¿Está seguro de que desea eliminar este plato?",
+            preferredStyle: .alert
+        )
+
+        let cancelAction = UIAlertAction(title: "Cancelar", style: .cancel, handler: nil)
+        let deleteAction = UIAlertAction(title: "Eliminar", style: .destructive) { (_) in
+            self.performDeletion(dish: dish, at: indexPath)
+        }
+
+        alertController.addAction(cancelAction)
+        alertController.addAction(deleteAction)
+
+        present(alertController, animated: true, completion: nil)
+    }
+
+    func performDeletion(dish: Dish, at indexPath: IndexPath) {
         let ref = Database.database().reference()
         let dishesRef = ref.child("dishes").child(dish.id)
+
         Storage.storage().reference().child("images").child(dish.imagenID).delete { (error) in
             if let error = error {
                 print("Error deleting image: \(error.localizedDescription)")
+                self.showAlert(title: "Error", message: "No se pudo eliminar la imagen.")
             } else {
                 print("Image deleted successfully")
-                
+
                 dishesRef.removeValue { (dbError, _) in
                     if let dbError = dbError {
                         print("Error deleting dish from database: \(dbError.localizedDescription)")
+                        self.showAlert(title: "Error", message: "No se pudo eliminar el plato de la base de datos.")
                     } else {
                         print("Dish deleted successfully")
                         self.dishes.remove(at: indexPath.row)
                         self.listDishesTable.deleteRows(at: [indexPath], with: .fade)
+                        self.showAlert(title: "Éxito", message: "Plato eliminado correctamente.")
                     }
                 }
             }
@@ -105,21 +127,12 @@ class DishesListViewController: UIViewController, UITableViewDataSource, UITable
     func getDishes() {
         let ref = Database.database().reference()
         let dishesRef = ref.child("dishes")
-
-        // Evento para agregar nuevos platos
         dishesRef.observe(DataEventType.childAdded, with: { (snapshot) in
             self.handleDishAdded(snapshot: snapshot)
         })
-
-        // Evento para cambios en los platos existentes
         dishesRef.observe(DataEventType.childChanged, with: { (snapshot) in
             self.handleDishChanged(snapshot: snapshot)
         })
-
-        // Evento para eliminar platos
-        /*dishesRef.observe(DataEventType.childRemoved, with: { (snapshot) in
-            self.handleDishRemoved(snapshot: snapshot)
-        })*/
     }
 
     // Función para manejar la adición de nuevos platos
@@ -176,6 +189,14 @@ class DishesListViewController: UIViewController, UITableViewDataSource, UITable
             return element.id == id
         }
     }
+    
+    func showAlert(title: String, message: String) {
+        let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        let okAction = UIAlertAction(title: "OK", style: .default, handler: nil)
+        alertController.addAction(okAction)
+        present(alertController, animated: true, completion: nil)
+    }
+    
 }
 
 extension DishesListViewController: UIViewControllerTransitioningDelegate {

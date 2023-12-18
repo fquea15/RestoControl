@@ -29,11 +29,19 @@ class LoginViewController: UIViewController {
                 print("not Access")
                 self.txtEmail.text = ""
                 self.txtPassword.text = ""
+                self.showAlert(title: "Error", message: "No se pudo iniciar sesión. Verifica tu correo electrónico y contraseña.")
             }else {
                 print("success access")
                 self.performSegue(withIdentifier: "listDishes", sender: nil)
             }
         }
+    }
+    
+    func showAlert(title: String, message: String) {
+        let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        let okAction = UIAlertAction(title: "OK", style: .default, handler: nil)
+        alertController.addAction(okAction)
+        present(alertController, animated: true, completion: nil)
     }
 }
 

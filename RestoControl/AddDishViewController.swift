@@ -3,6 +3,8 @@ import FirebaseDatabase
 import FirebaseStorage
 
 class AddDishViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UIPickerViewDelegate, UIPickerViewDataSource {
+    
+    var didEditDish: ((Dish) -> Void)?
 
     @IBOutlet weak var nameTextField: UITextField!
     @IBOutlet weak var categoryPicker: UIPickerView!
@@ -91,51 +93,73 @@ class AddDishViewController: UIViewController, UIImagePickerControllerDelegate, 
                       let price = priceTextField.text, !price.isEmpty,
                       let description = descriptionTextField.text, !description.isEmpty,
                       let dishImage = imageView.image else {
+                    showAlert(title: "Campos Incompletos", message: "Por favor, complete todos los campos.")
                     return
                 }
 
                 let selectedCategory = categories[categoryPicker.selectedRow(inComponent: 0)]
                 let selectedType = types[typePicker.selectedRow(inComponent: 0)]
 
-                uploadImage(dishImage) { imageUrl in
-                    let dishData: [String: Any] = [
-                        "name": name,
-                        "category": selectedCategory,
-                        "type": selectedType,
-                        "price": price,
-                        "description": description,
-                        "image": [
-                            "id": "\(self.imageId).jpg",
-                            "url": imageUrl
+                uploadImageWithProgress(dishImage) { imageUrl, error in
+                    if let error = error {
+                        self.showAlert(title: "Error", message: "Error al cargar la imagen: \(error.localizedDescription)")
+                    } else if let imageUrl = imageUrl {
+                        let dishData: [String: Any] = [
+                            "name": name,
+                            "category": selectedCategory,
+                            "type": selectedType,
+                            "price": price,
+                            "description": description,
+                            "image": [
+                                "id": "\(self.imageId).jpg",
+                                "url": imageUrl
+                            ]
                         ]
-                    ]
 
-                    self.addDishToDatabase(dishData)
+                        self.addDishToDatabase(dishData)
+                    }
                 }
             } else if title == "Cancelar"{
                 dismiss(animated: true, completion: nil)
             }
         }
+        
     }
-
-    func uploadImage(_ image: UIImage, completion: @escaping (String) -> Void) {
-        guard let imageData = image.jpegData(compressionQuality: 0.5) else {
-            return
-        }
-
-        imageId = UUID().uuidString
+    
+func uploadImageWithProgress(_ image: UIImage, completion: @escaping (String?, Error?) -> Void) {
+    guard let imageData = image.jpegData(compressionQuality: 0.5) else {
+        completion(nil, NSError(domain: "YourAppDomain", code: 0, userInfo: [NSLocalizedDescriptionKey: "Error al obtener datos de imagen"]))
+        return
+    }
+    imageId = UUID().uuidString
         let storageRef = Storage.storage().reference().child("images/\(imageId).jpg")
 
-        storageRef.putData(imageData, metadata: nil) { (_, error) in
+        // Mostrar alerta de progreso
+        let progressAlert = UIAlertController(title: "Cargando", message: "Por favor, espera...", preferredStyle: .alert)
+        present(progressAlert, animated: true, completion: nil)
+
+        let uploadTask = storageRef.putData(imageData, metadata: nil) { (metadata, error) in
+            // Ocultar la alerta de progreso al finalizar la carga
+            progressAlert.dismiss(animated: true, completion: nil)
+
             if let error = error {
-                print("Error uploading image: \(error.localizedDescription)")
+                completion(nil, error)
             } else {
                 storageRef.downloadURL { (url, error) in
                     if let imageUrl = url?.absoluteString {
-                        completion(imageUrl)
+                        completion(imageUrl, nil)
+                    } else {
+                        completion(nil, error)
                     }
                 }
             }
+        }
+
+        // Observar el progreso de la carga
+        uploadTask.observe(.progress) { snapshot in
+            guard let progress = snapshot.progress else { return }
+            let percentComplete = Float(progress.completedUnitCount) / Float(progress.totalUnitCount)
+            progressAlert.message = "Cargando... \(Int(percentComplete * 100))%"
         }
     }
 
@@ -205,20 +229,23 @@ class AddDishViewController: UIViewController, UIImagePickerControllerDelegate, 
         let selectedType = types[typePicker.selectedRow(inComponent: 0)]
         if imageView.image != nil {
             deleteImageFromStorage(imageId: dish?.imagenID)
-            uploadImage(dishImage) { imageUrl in
-                let updatedDishData: [String: Any] = [
-                    "name": name,
-                    "category": selectedCategory,
-                    "type": selectedType,
-                    "price": price,
-                    "description": description,
-                    "image": [
-                        "id": "\(self.imageId).jpg",
-                        "url": imageUrl
+            uploadImageWithProgress(dishImage) { imageUrl, error in
+                if let error = error {
+                    self.showAlert(title: "Error", message: "Error al cargar la imagen: \(error.localizedDescription)")
+                } else if let imageUrl = imageUrl {
+                    let updatedDishData: [String: Any] = [
+                        "name": name,
+                        "category": selectedCategory,
+                        "type": selectedType,
+                        "price": price,
+                        "description": description,
+                        "image": [
+                            "id": "\(self.imageId).jpg",
+                            "url": imageUrl
+                        ]
                     ]
-                ]
-
-                self.updateDishInDatabase(updatedDishData)
+                    self.updateDishInDatabase(updatedDishData)
+                }
             }
         } else {
             let updatedDishData: [String: Any] = [
@@ -264,6 +291,7 @@ class AddDishViewController: UIViewController, UIImagePickerControllerDelegate, 
                 print("Error updating dish in database: \(error.localizedDescription)")
             } else {
                 print("Dish updated successfully")
+                self.didEditDish?(dish)
                 self.dismiss(animated: true, completion: nil)
             }
         }
@@ -273,5 +301,16 @@ class AddDishViewController: UIViewController, UIImagePickerControllerDelegate, 
         present(imagePicker, animated: true, completion: nil)
     }
     
-    
+    func showAlert(title: String, message: String) {
+        let alertController = UIAlertController(
+            title: title,
+            message: message,
+            preferredStyle: .alert
+        )
+
+        let okAction = UIAlertAction(title: "OK", style: .default, handler: nil)
+        alertController.addAction(okAction)
+
+        present(alertController, animated: true, completion: nil)
+    }
 }
