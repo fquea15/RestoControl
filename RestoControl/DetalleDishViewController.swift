@@ -15,7 +15,10 @@ class DetalleDishViewController: UIViewController {
     let databaseRef = Database.database().reference()
     var ratings:[Rating] = []
 
-    @IBOutlet weak var nameLabel: UILabel!
+    //BAR-NAVIGATOR
+    @IBOutlet weak var detallBar: UINavigationItem!
+    
+    //LABEL
     @IBOutlet weak var categoryLabel: UILabel!
     @IBOutlet weak var typeLabel: UILabel!
     @IBOutlet weak var priceLabel: UILabel!
@@ -37,7 +40,7 @@ class DetalleDishViewController: UIViewController {
         //setupGesture()
 
         if let dish = selectedDish {
-            nameLabel.text = dish.name
+            detallBar.title = dish.name
             categoryLabel.text = dish.category
             typeLabel.text = dish.type
             priceLabel.text = "S/.\(dish.price)"
@@ -134,4 +137,18 @@ class DetalleDishViewController: UIViewController {
     /*@IBAction func cerrarVentanaTapped(_ sender: Any) {
         dismiss(animated: true, completion: nil)
     }*/
+    
+    @IBAction func editTapped(_ sender: Any) {
+        performSegue(withIdentifier: "editDish", sender: self.selectedDish)
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "editDish" {
+            if let editDishVC = segue.destination as? AddDishViewController,
+               let selectedDish = sender as? Dish {
+                editDishVC.dish = selectedDish
+            }
+        }
+    }
+    
 }

@@ -10,10 +10,25 @@ class AddDishViewController: UIViewController, UIImagePickerControllerDelegate, 
     @IBOutlet weak var priceTextField: UITextField!
     @IBOutlet weak var descriptionTextField: UITextField!
     @IBOutlet weak var imageView: UIImageView!
-
+    
+    //BOTONES
+    
+    @IBOutlet weak var buttonAdd: UIButton!
+    @IBOutlet weak var buttonUpdate: UIButton!
+    
+    //NAVBAR
+    @IBOutlet weak var navbarAddDish: UINavigationItem!
+    @IBOutlet weak var titleAddUpdateDish: UILabel!
+    
+    
     var imagePicker: UIImagePickerController!
-    var categories: [String] = ["Categoría 1", "Categoría 2", "Categoría 3"]
-    var types: [String] = ["Tipo 1", "Tipo 2", "Tipo 3"]
+    var categories: [String] = ["Carnes", "Mariscos", "Pollo", "Aperitivo", "Leche", "Queso", "Cremosa", "Pasta", "Dulces"]
+    var types: [String] = ["Entrada", "Principal", "Postre"]
+    var dish: Dish?
+    
+    var imageId = ""
+    var overlayView: UIView!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -25,33 +40,79 @@ class AddDishViewController: UIViewController, UIImagePickerControllerDelegate, 
 
         typePicker.delegate = self
         typePicker.dataSource = self
+        
+        
+        if let dish = dish {
+            nameTextField.text = dish.name
+            if let categoryIndex = categories.firstIndex(of: dish.category),
+               let typeIndex = types.firstIndex(of: dish.type) {
+                categoryPicker.selectRow(categoryIndex, inComponent: 0, animated: false)
+                typePicker.selectRow(typeIndex, inComponent: 0, animated: false)
+            }
+
+            priceTextField.text = (dish.price)
+            descriptionTextField.text = dish.description
+            if let imageUrl = URL(string: dish.imagenURL) {
+                imageView.sd_setImage(with: imageUrl, completed: nil)
+            }
+            
+            buttonAdd.setTitle("Cancelar", for: .normal)
+            buttonAdd.backgroundColor = UIColor.red
+            buttonUpdate.isHidden = false
+            titleAddUpdateDish.text = "ACTUALIZAR PLATILLO"
+        }else {
+            buttonAdd.setTitle("Agregar", for: .normal)
+            buttonAdd.backgroundColor = UIColor.blue
+            navbarAddDish.title = "AGREGAR"
+            titleAddUpdateDish.text = "NUEVO PLATILLO"
+            
+            overlayView = UIView(frame: imageView.bounds)
+            overlayView.backgroundColor = UIColor.gray
+            imageView.addSubview(overlayView)
+
+            let placeholderLabel = UILabel()
+            placeholderLabel.text = "Insertar Imagen"
+            placeholderLabel.textColor = .black
+            placeholderLabel.textAlignment = .center
+            placeholderLabel.translatesAutoresizingMaskIntoConstraints = false
+            overlayView.addSubview(placeholderLabel)
+
+            placeholderLabel.centerXAnchor.constraint(equalTo: overlayView.centerXAnchor).isActive = true
+            placeholderLabel.centerYAnchor.constraint(equalTo: overlayView.centerYAnchor).isActive = true
+        }
     }
 
     @IBAction func addDishTapped(_ sender: Any) {
-        guard let name = nameTextField.text, !name.isEmpty,
-              let price = priceTextField.text, !price.isEmpty,
-              let description = descriptionTextField.text, !description.isEmpty,
-              let dishImage = imageView.image else {
-            return
-        }
+        if let title = buttonAdd.title(for: .normal){
+            if title == "Agregar"{
+                guard let name = nameTextField.text, !name.isEmpty,
+                      let price = priceTextField.text, !price.isEmpty,
+                      let description = descriptionTextField.text, !description.isEmpty,
+                      let dishImage = imageView.image else {
+                    return
+                }
 
-        let selectedCategory = categories[categoryPicker.selectedRow(inComponent: 0)]
-        let selectedType = types[typePicker.selectedRow(inComponent: 0)]
+                let selectedCategory = categories[categoryPicker.selectedRow(inComponent: 0)]
+                let selectedType = types[typePicker.selectedRow(inComponent: 0)]
 
-        uploadImage(dishImage) { imageUrl in
-            let dishData: [String: Any] = [
-                "name": name,
-                "category": selectedCategory,
-                "type": selectedType,
-                "price": price,
-                "description": description,
-                "image": [
-                    "id": UUID().uuidString,
-                    "url": imageUrl
-                ]
-            ]
+                uploadImage(dishImage) { imageUrl in
+                    let dishData: [String: Any] = [
+                        "name": name,
+                        "category": selectedCategory,
+                        "type": selectedType,
+                        "price": price,
+                        "description": description,
+                        "image": [
+                            "id": "\(self.imageId).jpg",
+                            "url": imageUrl
+                        ]
+                    ]
 
-            self.addDishToDatabase(dishData)
+                    self.addDishToDatabase(dishData)
+                }
+            } else if title == "Cancelar"{
+                dismiss(animated: true, completion: nil)
+            }
         }
     }
 
@@ -60,7 +121,7 @@ class AddDishViewController: UIViewController, UIImagePickerControllerDelegate, 
             return
         }
 
-        let imageId = UUID().uuidString
+        imageId = UUID().uuidString
         let storageRef = Storage.storage().reference().child("images/\(imageId).jpg")
 
         storageRef.putData(imageData, metadata: nil) { (_, error) in
@@ -85,7 +146,6 @@ class AddDishViewController: UIViewController, UIImagePickerControllerDelegate, 
                 print("Error adding dish to database: \(error.localizedDescription)")
             } else {
                 print("Dish added successfully")
-                //self.dismiss(animated: true, completion: nil)
                 self.navigationController?.popViewController(animated: true)
             }
         }
@@ -94,9 +154,10 @@ class AddDishViewController: UIViewController, UIImagePickerControllerDelegate, 
     @IBAction func selectImageTapped(_ sender: Any) {
         present(imagePicker, animated: true, completion: nil)
     }
-
-    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+    func imagePickerController(_ picker: UIImagePickerController,
+                               didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
         if let selectedImage = info[.originalImage] as? UIImage {
+            overlayView.removeFromSuperview()
             imageView.image = selectedImage
         }
         dismiss(animated: true, completion: nil)

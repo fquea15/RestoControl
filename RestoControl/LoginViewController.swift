@@ -16,7 +16,6 @@ class LoginViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view.
     }
     
     
@@ -24,7 +23,6 @@ class LoginViewController: UIViewController {
         guard let email = txtEmail.text, let password = txtPassword.text else {
             return
         }
-        
         Auth.auth().signIn(withEmail: email, password: password) {
             (user, error) in
             if error != nil {
@@ -37,7 +35,5 @@ class LoginViewController: UIViewController {
             }
         }
     }
-    
-
 }
 
