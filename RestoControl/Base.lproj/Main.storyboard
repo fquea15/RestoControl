@@ -419,7 +419,7 @@
                                 <rect key="frame" x="70" y="658" width="274" height="31"/>
                                 <subviews>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="yl0-X8-34W">
-                                        <rect key="frame" x="0.0" y="0.0" width="80" height="31"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="274" height="31"/>
                                         <color key="backgroundColor" systemColor="systemBlueColor"/>
                                         <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                         <state key="normal" title="Button"/>
@@ -430,17 +430,33 @@
                                             <action selector="addDishTapped:" destination="6hw-bw-oec" eventType="touchUpInside" id="N5L-ze-HLX"/>
                                         </connections>
                                     </button>
-                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="sOG-3Z-QTb">
-                                        <rect key="frame" x="180" y="0.0" width="94" height="31"/>
+                                    <button hidden="YES" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="sOG-3Z-QTb">
+                                        <rect key="frame" x="0.0" y="0.0" width="0.0" height="31"/>
                                         <color key="backgroundColor" systemColor="systemGray2Color"/>
                                         <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                         <state key="normal" title="Button"/>
                                         <buttonConfiguration key="configuration" style="plain" title="Actualizar">
                                             <fontDescription key="titleFontDescription" type="boldSystem" pointSize="14"/>
                                         </buttonConfiguration>
+                                        <connections>
+                                            <action selector="updateDishTapped:" destination="6hw-bw-oec" eventType="touchUpInside" id="euG-4v-gTn"/>
+                                        </connections>
                                     </button>
                                 </subviews>
                             </stackView>
+                            <button hidden="YES" opaque="NO" contentMode="redraw" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="f07-yt-Avg">
+                                <rect key="frame" x="334" y="472.5" width="80" height="28"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="80" id="GZy-OW-x3j"/>
+                                </constraints>
+                                <state key="normal" title="Button"/>
+                                <buttonConfiguration key="configuration" style="gray" title="Cambiar">
+                                    <fontDescription key="titleFontDescription" name="Helvetica" family="Helvetica" pointSize="12"/>
+                                </buttonConfiguration>
+                                <connections>
+                                    <action selector="changeImageDishTapped:" destination="6hw-bw-oec" eventType="touchUpInside" id="Qtt-ru-ZWl"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="MQI-D8-7Te"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
@@ -450,6 +466,7 @@
                             <constraint firstItem="DlC-aC-CDG" firstAttribute="centerX" secondItem="nBe-gJ-ccr" secondAttribute="centerX" id="5Bg-bA-kkx"/>
                             <constraint firstItem="XfF-M1-tFL" firstAttribute="centerX" secondItem="rtR-ET-hO2" secondAttribute="centerX" id="7yB-3H-AGj"/>
                             <constraint firstItem="DlC-aC-CDG" firstAttribute="top" secondItem="Avb-J4-m63" secondAttribute="bottom" constant="10" id="8FH-7o-Qfo"/>
+                            <constraint firstAttribute="trailing" secondItem="f07-yt-Avg" secondAttribute="trailing" id="8jE-IS-Vpg"/>
                             <constraint firstItem="rtR-ET-hO2" firstAttribute="centerX" secondItem="ir2-MZ-Daw" secondAttribute="centerX" id="GIl-ei-s0H"/>
                             <constraint firstItem="Avb-J4-m63" firstAttribute="centerX" secondItem="DlC-aC-CDG" secondAttribute="centerX" id="LfV-zI-Kpp"/>
                             <constraint firstItem="oNR-Nd-TAE" firstAttribute="top" secondItem="MQI-D8-7Te" secondAttribute="top" id="MZY-84-tTp"/>
@@ -467,6 +484,7 @@
                             <constraint firstItem="MQI-D8-7Te" firstAttribute="trailing" secondItem="fMP-ch-HX7" secondAttribute="trailing" constant="70" id="e8M-rf-icv"/>
                             <constraint firstAttribute="trailing" secondItem="Avb-J4-m63" secondAttribute="trailing" id="hqx-B7-6p3"/>
                             <constraint firstItem="YbR-vu-bMi" firstAttribute="top" secondItem="nBe-gJ-ccr" secondAttribute="bottom" constant="15" id="qjU-xg-nFZ"/>
+                            <constraint firstItem="f07-yt-Avg" firstAttribute="top" secondItem="pkX-Dg-X6Q" secondAttribute="bottom" constant="40" id="qz6-xk-zoK"/>
                             <constraint firstItem="rtR-ET-hO2" firstAttribute="top" secondItem="XfF-M1-tFL" secondAttribute="bottom" constant="20" id="rKI-9y-EOI"/>
                             <constraint firstItem="XfF-M1-tFL" firstAttribute="top" secondItem="oNR-Nd-TAE" secondAttribute="bottom" constant="30" id="xJ8-Lg-2h2"/>
                         </constraints>
@@ -479,8 +497,9 @@
                         </barButtonItem>
                     </navigationItem>
                     <connections>
+                        <outlet property="ButtonChangeImage" destination="f07-yt-Avg" id="tjU-3o-Unp"/>
                         <outlet property="buttonAdd" destination="yl0-X8-34W" id="XxS-kl-uxF"/>
-                        <outlet property="buttonUpdate" destination="sOG-3Z-QTb" id="MKN-Hv-q7L"/>
+                        <outlet property="buttonUpdate" destination="sOG-3Z-QTb" id="z7b-Zi-1yJ"/>
                         <outlet property="categoryPicker" destination="IWX-M1-bhf" id="G8T-M7-gS9"/>
                         <outlet property="descriptionTextField" destination="YbR-vu-bMi" id="jkm-ng-nj8"/>
                         <outlet property="imageView" destination="ypc-HM-DCW" id="iQ3-cJ-xx9"/>
@@ -493,7 +512,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="SfJ-HI-ILn" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="2725" y="208"/>
+            <point key="canvasLocation" x="2724.6376811594205" y="207.58928571428569"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="SDi-BU-wFx">

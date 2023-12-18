@@ -102,33 +102,74 @@ class DishesListViewController: UIViewController, UITableViewDataSource, UITable
         dismiss(animated: true, completion: nil)
     }                    
     
-    func getDishes () {
+    func getDishes() {
         let ref = Database.database().reference()
-        
         let dishesRef = ref.child("dishes")
 
-        dishesRef.observe(DataEventType.childAdded, with: {
-            (snapshot) in
-            let dish = Dish()
-            dish.id = snapshot.key
-            dish.name = (snapshot.value as! NSDictionary)["name"] as! String
-            dish.category = (snapshot.value as! NSDictionary)["category"] as! String
-            dish.type = (snapshot.value as! NSDictionary)["type"] as! String
-            dish.price = (snapshot.value as! NSDictionary)["price"] as! String
-            dish.description = (snapshot.value as! NSDictionary)["description"] as! String
-            if let imageDict = snapshot.childSnapshot(forPath: "image").value as? NSDictionary {
-                dish.imagenID = imageDict["id"] as? String ?? ""
-                dish.imagenURL = imageDict["url"] as? String ?? ""
-            }
-
-            if !self.arrayContaisID(snapshot.key){
-                self.dishes.append(dish)
-            }
-            
-            self.listDishesTable.reloadData()
+        // Evento para agregar nuevos platos
+        dishesRef.observe(DataEventType.childAdded, with: { (snapshot) in
+            self.handleDishAdded(snapshot: snapshot)
         })
+
+        // Evento para cambios en los platos existentes
+        dishesRef.observe(DataEventType.childChanged, with: { (snapshot) in
+            self.handleDishChanged(snapshot: snapshot)
+        })
+
+        // Evento para eliminar platos
+        /*dishesRef.observe(DataEventType.childRemoved, with: { (snapshot) in
+            self.handleDishRemoved(snapshot: snapshot)
+        })*/
     }
-    
+
+    // Función para manejar la adición de nuevos platos
+    func handleDishAdded(snapshot: DataSnapshot) {
+        let newDish = Dish()
+        newDish.id = snapshot.key
+        newDish.name = (snapshot.value as! NSDictionary)["name"] as! String
+        newDish.category = (snapshot.value as! NSDictionary)["category"] as! String
+        newDish.type = (snapshot.value as! NSDictionary)["type"] as! String
+        newDish.price = (snapshot.value as! NSDictionary)["price"] as! String
+        newDish.description = (snapshot.value as! NSDictionary)["description"] as! String
+        if let imageDict = snapshot.childSnapshot(forPath: "image").value as? NSDictionary {
+            newDish.imagenID = imageDict["id"] as? String ?? ""
+            newDish.imagenURL = imageDict["url"] as? String ?? ""
+        }
+
+        if !self.arrayContaisID(snapshot.key) {
+            self.dishes.append(newDish)
+            self.listDishesTable.reloadData()
+        }
+    }
+
+    // Función para manejar cambios en platos existentes
+    func handleDishChanged(snapshot: DataSnapshot) {
+        let updatedDish = Dish()
+        updatedDish.id = snapshot.key
+        updatedDish.name = (snapshot.value as! NSDictionary)["name"] as! String
+        updatedDish.category = (snapshot.value as! NSDictionary)["category"] as! String
+        updatedDish.type = (snapshot.value as! NSDictionary)["type"] as! String
+        updatedDish.price = (snapshot.value as! NSDictionary)["price"] as! String
+        updatedDish.description = (snapshot.value as! NSDictionary)["description"] as! String
+        if let imageDict = snapshot.childSnapshot(forPath: "image").value as? NSDictionary {
+            updatedDish.imagenID = imageDict["id"] as? String ?? ""
+            updatedDish.imagenURL = imageDict["url"] as? String ?? ""
+        }
+
+        if let index = self.dishes.firstIndex(where: { $0.id == updatedDish.id }) {
+            self.dishes[index] = updatedDish
+            self.listDishesTable.reloadRows(at: [IndexPath(row: index, section: 0)], with: .none)
+        }
+    }
+
+    // Función para manejar la eliminación de platos
+    func handleDishRemoved(snapshot: DataSnapshot) {
+        if let index = self.dishes.firstIndex(where: { $0.id == snapshot.key }) {
+            self.dishes.remove(at: index)
+            self.listDishesTable.deleteRows(at: [IndexPath(row: index, section: 0)], with: .fade)
+        }
+    }
+
     func arrayContaisID(_ id: String) -> Bool {
         return dishes.contains{
             element in

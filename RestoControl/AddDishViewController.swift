@@ -15,6 +15,7 @@ class AddDishViewController: UIViewController, UIImagePickerControllerDelegate, 
     
     @IBOutlet weak var buttonAdd: UIButton!
     @IBOutlet weak var buttonUpdate: UIButton!
+    @IBOutlet weak var ButtonChangeImage: UIButton!
     
     //NAVBAR
     @IBOutlet weak var navbarAddDish: UINavigationItem!
@@ -59,6 +60,7 @@ class AddDishViewController: UIViewController, UIImagePickerControllerDelegate, 
             buttonAdd.setTitle("Cancelar", for: .normal)
             buttonAdd.backgroundColor = UIColor.red
             buttonUpdate.isHidden = false
+            ButtonChangeImage.isHidden = false
             titleAddUpdateDish.text = "ACTUALIZAR PLATILLO"
         }else {
             buttonAdd.setTitle("Agregar", for: .normal)
@@ -157,7 +159,10 @@ class AddDishViewController: UIViewController, UIImagePickerControllerDelegate, 
     func imagePickerController(_ picker: UIImagePickerController,
                                didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
         if let selectedImage = info[.originalImage] as? UIImage {
-            overlayView.removeFromSuperview()
+            if dish == nil{
+                overlayView.removeFromSuperview()
+            }
+
             imageView.image = selectedImage
         }
         dismiss(animated: true, completion: nil)
@@ -187,4 +192,86 @@ class AddDishViewController: UIViewController, UIImagePickerControllerDelegate, 
         }
         return nil
     }
+    
+    @IBAction func updateDishTapped(_ sender: Any) {
+        guard let name = nameTextField.text, !name.isEmpty,
+              let price = priceTextField.text, !price.isEmpty,
+              let description = descriptionTextField.text, !description.isEmpty,
+              let dishImage = imageView.image else {
+            return
+        }
+
+        let selectedCategory = categories[categoryPicker.selectedRow(inComponent: 0)]
+        let selectedType = types[typePicker.selectedRow(inComponent: 0)]
+        if imageView.image != nil {
+            deleteImageFromStorage(imageId: dish?.imagenID)
+            uploadImage(dishImage) { imageUrl in
+                let updatedDishData: [String: Any] = [
+                    "name": name,
+                    "category": selectedCategory,
+                    "type": selectedType,
+                    "price": price,
+                    "description": description,
+                    "image": [
+                        "id": "\(self.imageId).jpg",
+                        "url": imageUrl
+                    ]
+                ]
+
+                self.updateDishInDatabase(updatedDishData)
+            }
+        } else {
+            let updatedDishData: [String: Any] = [
+                "name": name,
+                "category": selectedCategory,
+                "type": selectedType,
+                "price": price,
+                "description": description,
+                "image": [
+                    "id": dish?.imagenID ?? "",
+                    "url": dish?.imagenURL ?? ""
+                ]
+            ]
+
+            self.updateDishInDatabase(updatedDishData)
+        }
+    }
+
+    func deleteImageFromStorage(imageId: String?) {
+        guard let imageId = imageId else {
+            return
+        }
+ 
+        let storageRef = Storage.storage().reference().child("images/\(imageId)")
+        storageRef.delete { error in
+            if let error = error {
+                print("Error deleting image from storage: \(error.localizedDescription)")
+            } else {
+                print("Image deleted successfully from storage")
+            }
+        }
+    }
+
+    func updateDishInDatabase(_ dishData: [String: Any]) {
+        guard let dish = dish else {
+            return
+        }
+
+        let ref = Database.database().reference()
+        let dishesRef = ref.child("dishes").child(dish.id)
+        dishesRef.updateChildValues(dishData) { (error, _) in
+            if let error = error {
+                print("Error updating dish in database: \(error.localizedDescription)")
+            } else {
+                print("Dish updated successfully")
+                self.dismiss(animated: true, completion: nil)
+            }
+        }
+    }
+    
+    @IBAction func changeImageDishTapped(_ sender: Any) {
+        present(imagePicker, animated: true, completion: nil)
+    }
+    
+    
 }

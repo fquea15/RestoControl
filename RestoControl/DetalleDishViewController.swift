@@ -48,30 +48,7 @@ class DetalleDishViewController: UIViewController {
             if let imageUrl = URL(string: dish.imagenURL) {
                 imageView.sd_setImage(with: imageUrl, completed: nil)
             }
-
-            /*getRating(id_dish: dish.id) {
-                if (!self.ratings.isEmpty) {
-                    for rating in self.ratings {
-                        print(rating.rating)
-                    }
-                }
-                
-                
-                // Verificar si ya hemos obtenido todas las calificaciones
-                if self.ratingsCount == ratingsAll.count {
-                    // Calcular el promedio solo después de obtener todas las calificaciones
-                    print(self.ratingsCount)
-                    print(self.sumaRating)
-                    let promedio = self.sumaRating / Float(self.ratingsCount)
-                    let promedioRedondeado = (promedio * 100).rounded() / 100
-                    print("Promedio de ratings: \(promedioRedondeado)")
-                }
-            }*/
         }
-        /*let screenHeight = UIScreen.main.bounds.height
-        modalView.frame = CGRect(x: 0, y: screenHeight / 2, width: view.bounds.width, height: screenHeight / 2)
-        print("modalView frame: \(modalView.frame)")*/
-
     }
     
     override func viewWillAppear(_ animated: Bool) {
